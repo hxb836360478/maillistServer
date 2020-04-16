@@ -22,9 +22,19 @@ var upload = multer({storage})
 
 // 上传图片
 router.post('/uploadImg',upload.single('file'),function(req,res,next){
-    console.log(req.file,'1111111111111111111111111');
-    var fileName = req.file.filename;
-    res.send({message:'上传成功',code:200,data:{fileName,showImgUrl:'/images/'+fileName}});
+    var fileName = '/api/images/'+req.file.filename;
+    console.log(fileName);
+    var username = req.body.username;
+    const sqlStr = 'insert into communication(fileName,username) values(?,?)';
+    var note = [fileName,username];
+    mysql.query(sqlStr,note,(err,results,fields) => {
+          if(err){
+            res.send({code:5000,message:'error',err:err})
+          }else{
+            res.send({code:200,data:'添加成功'})
+          }
+      })
+    res.send({message:'上传成功',code:200,data:{fileName,showImgUrl:fileName}});
 });
 
 // 删除图片 根据文件名删除图片

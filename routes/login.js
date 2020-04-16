@@ -8,7 +8,6 @@ router.post('/loginSystem',function(req,res,next){
   var password = req.body.password;
   var sql = 'SELECT * from login where username='+"'"+username+"'";
   mysql.query(sql,function(error,result,fileds){
-    console.log(result)
     if(error){
       res.send({code:4000,message:'faild',error});
     }else if(result.length==0){
