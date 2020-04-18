@@ -20,13 +20,26 @@ var storage = multer.diskStorage({
 });
 var upload = multer({storage})
 
+router.get('/list', function(req, res, next) {
+    var username = req.query.username
+    var sqlStr = 'SELECT * from album where username='+"'"+username+"'";
+    mysql.query(sqlStr,(err,results,fields) => {
+        if(err){
+            res.send({code:5000,message:'error',err:err})
+        }else{
+            res.send({code:200,data:results})
+        }
+    })
+});
+
 // 上传图片
 router.post('/uploadImg',upload.single('file'),function(req,res,next){
-    var fileName = '/api/images/'+req.file.filename;
-    console.log(fileName);
+    var name = req.file.filename;
+    var url = '/api/images/'+req.file.filename;
     var username = req.body.username;
-    const sqlStr = 'insert into communication(fileName,username) values(?,?)';
-    var note = [fileName,username];
+    var status  = 'done';
+    const sqlStr = 'insert into album(url,username,name,status) values(?,?,?,?)';
+    var note = [url,username,name,status];
     mysql.query(sqlStr,note,(err,results,fields) => {
           if(err){
             res.send({code:5000,message:'error',err:err})
@@ -34,20 +47,29 @@ router.post('/uploadImg',upload.single('file'),function(req,res,next){
             res.send({code:200,data:'添加成功'})
           }
       })
-    res.send({message:'上传成功',code:200,data:{fileName,showImgUrl:fileName}});
 });
 
 // 删除图片 根据文件名删除图片
 router.post('/deleteImg',function(req,res,next){
-    var fileName = req.body.fileName;
-    var filePath = path.join(__dirname,'../public/images'+'/'+fileName);
+    var name = req.body.name;
+    var uid = req.body.uid;
+    console.log(name)
+    var filePath = path.join(__dirname,'../public/images'+'/'+name);
     fs.unlink(filePath,(error)=>{
         if(error){
             res.send({message:'faild',code:3000,error})
         }else{
-            res.send({message:'删除成功',code:200})
+            const sqlStr = 'DELETE FROM album where uid='+uid;
+            mysql.query(sqlStr,(err,results,fields) => {
+                if(err){
+                res.send({code:5000,data:'删除失败',message:'error',err:err})
+                }else{
+                res.send({code:200,data:'删除成功'})
+                }
+            })
         }
     })
+
 });
 
 module.exports = router;
